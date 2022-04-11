@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>ripple | <%= locals.title %> </title>
+		<link rel="shortcut icon" href="/images/ripple-e-logo.svg" type="image/x-icon">
+		<link rel="stylesheet" href="/css/global.css">
+		<link rel="stylesheet" href="/css/login-register.css">
+		<style>
+			.logo-container {
+				position: relative;
+			}
+
+			.logo-container::after {
+				content: 'Registration';
+				position: absolute;
+				top: 70%;
+				left: 50%;
+				transform: translateX(-50%);
+				color: white;
+				border-radius: .25rem;
+				border: .1rem solid white;
+				padding: .25rem .5rem;
+			}
+
+			.modal {
+				max-width: 45rem;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="flash-message" aria-hidden="true"></div>
+
+		<div class="logo-container">
+			<svg class="logo" width="210" height="78" viewBox="0 0 210 78" xmlns="http://www.w3.org/2000/svg">
+				<use xlink:href="/images/ripple-logo.svg#ripple"></use>
+			</svg>
+		</div>
+
+		<form action="/register" method="post" onsubmit="event.preventDefault(); onSubmit(this)">
+			<input type="hidden" name="csrfToken" value="<%=locals.csrfToken%>">
+			<div class="input-container">
+				<label for="username" class="styled-label">Username</label>
+				<input type="text" class="styled-input" id="username" name="username" required>
+			</div>
+			<div class="input-container">
+				<label for="password" class="styled-label">Password</label>
+				<input type="password" class="styled-input" id="password" name="password" required>
+			</div>
+
+			<button class="styled-btn form-btn">Register</button>
+
+			<p class="other-info">Sudah punya akun? <a href="/login?no-cache=" class="styled-link">Login Disini</a></p>
+		</form>
+
+		<div class="modal-wrapper" id="reg-code-modal">
+			<div class="modal">
+				<p class="modal-desc">
+					Untuk alasan keamanan, Anda harus memasukkan <span class="accented">Kode Registrasi</span> pada field di bawah ini.
+				</p>
+
+				<div class="reg-code-container">
+					<div class="input-container">
+						<label for="reg-code" class="styled-label">Kode Registrasi</label>
+						<input type="text" class="styled-input" name="regCode" id="reg-code">
+					</div>
+					<button class="styled-btn" id="reg-code-btn">Confirm</button>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			const flashMessage = document.querySelector('.flash-message');
+			window.addEventListener('click', e => {
+				if (e.target !== flashMessage && flashMessage.classList.contains('active')) {
+					flashMessage.classList.remove('active');
+				}
+			})
+			const formEl = document.querySelector('form');
+			const regCodeModal = document.getElementById('reg-code-modal');
+			const regCodeInput = document.getElementById('reg-code');
+			const regCodeButton = document.getElementById('reg-code-btn');
+			regCodeModal.addEventListener('click', e => {
+				if(e.target===regCodeModal) regCodeModal.classList.remove('active');
+			})
+			regCodeButton.addEventListener('click', async (e) => {
+				try {
+					const formData = new FormData(formEl);
+					const data = {};
+					formData.forEach((value, key) => data[key] = value);
+					data.regCode = regCodeInput.value;
+					const res = await fetch('/register', {
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						method: 'POST',
+						body: JSON.stringify(data)
+					});
+					const json = await res.json();
+					if ('error' in json) {
+						flashMessage.textContent = json.error;
+						flashMessage.classList.add('error');
+						flashMessage.classList.add('active');
+						return;
+					}
+					flashMessage.textContent = json.success;
+					flashMessage.classList.add('success');
+					flashMessage.classList.add('active');
+					window.location.href = json.redirect + '?no-cache=' ;
+				} catch (err) {
+					console.error(err)
+				}
+			})
+			async function onSubmit(form) {
+				regCodeModal.classList.add('active');
+			}
+		</script>
+	</body>
+
+</html>

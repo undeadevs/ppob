@@ -1,0 +1,50 @@
+main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: fit-content;
+    min-height: 100vh;
+    padding: 0 5rem;
+}
+
+form {
+    width: 100%;
+    display: grid;
+    gap: 1.5rem;
+}
+
+.form-title {
+    margin-bottom: 2.5rem;
+}
+
+.bill-check-container {
+    display: grid;
+    grid-template-columns: 1fr auto;
+}
+
+.bill-check-container .styled-input {
+    border-radius: .25rem 0 0 .25rem;
+}
+
+.bill-check-container .styled-btn {
+    border-radius: 0 .25rem .25rem 0;
+}
+
+.bills-wrapper{
+    width: 100%;
+}
+
+.table-container tbody>tr.totals>td:first-child:before{
+    background-color: transparent;
+    border: .1rem solid white;
+}
+
+.table-container .total-label{
+    font-weight: 600;
+}
+
+.table-container tr.totals #pay-btn{
+    font-size: 1rem;
+    padding: .5rem 2rem;
+}

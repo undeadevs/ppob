@@ -1,0 +1,9 @@
+{
+    "imports": {
+        "https://deno.land/std@0.106.0/node/events.ts": "https://deno.land/std@0.114.0/node/events.ts",
+        "https://deno.land/std@0.83.0/async/pool.ts": "https://deno.land/std@0.114.0/async/pool.ts",
+        "https://deno.land/x/dex@1.0.2/lib/deps/path/": "https://deno.land/std@0.114.0/path/",
+        "denodb": "https://raw.githubusercontent.com/undeadevs/denodb/master/mod.ts",
+        "denodb/": "https://raw.githubusercontent.com/undeadevs/denodb/master/"
+    }
+}

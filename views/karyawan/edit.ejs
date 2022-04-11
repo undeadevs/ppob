@@ -1,0 +1,120 @@
+<% const final = await extend(`partials/layout`, {}, (section)=>{ %>
+
+<% section['headExt'] = () => { %>
+
+<link rel="stylesheet" href="/css/has-form.css">
+
+<% } %>
+
+<% section['sidebar-items'] = () => { %>
+
+<li class="sidebar-item">
+	<a href="/dashboard?no-cache=" class="sidebar-link">
+		<i class="fas fa-tv"></i>
+		<p>Dashboard</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/pelanggan?no-cache=" class="sidebar-link">
+		<i class="fas fa-user"></i>
+		<p>Daftar Pelanggan</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/karyawan?no-cache=" class="sidebar-link active">
+		<i class="fas fa-user-tie"></i>
+		<p>Daftar Karyawan</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/penggunaan?no-cache=" class="sidebar-link">
+		<i class="fas fa-hand-holding-water"></i>
+		<p>Daftar Penggunaan</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/pembayaran?no-cache=" class="sidebar-link">
+		<i class="fas fa-hand-holding-usd"></i>
+		<p>Histori Pembayaran</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/tarif?no-cache=" class="sidebar-link">
+		<i class="fas fa-tags"></i>
+		<p>Daftar Tarif</p>
+	</a>
+</li>
+
+<% } %>
+
+<% section['content'] = () => { %>
+<h2 class="form-title">Edit Karyawan</h2>
+<form method="post" onsubmit="event.preventDefault(); onSubmit(this)">
+	<input type="hidden" name="csrfToken" value="<%=locals.csrfToken%>">
+	<div class="input-container">
+		<label for="username" class="styled-label">Username</label>
+		<input type="text" class="styled-input" name="username" id="username" value="<%=karyawanData.username%>" required>
+	</div>
+	<div class="input-container">
+		<label for="role" class="styled-label">Subkategori</label>
+		<div class="select-wrapper">
+			<select class="styled-input" name="role" id="role" required>
+				<option value="" selected hidden disabled>-</option>
+				<% [{roleName: 'administrator', roleDisplay: 'Administrator'}, {roleName: 'field_officer', roleDisplay: 'Field Officer'}, {roleName: 'cashier', roleDisplay: 'Cashier'}].forEach(role=>{ %> 
+					<option value="<%= role.roleName %>" <%=role.roleName===karyawanData.role?' selected':''%>><%= role.roleDisplay %></option>
+				<% }) %> 
+			</select>
+		</div>
+	</div>
+	<div class="input-container">
+		<label for="password" class="styled-label">Password</label>
+		<input type="password" name="password" id="password">
+	</div>
+	<button class="styled-btn form-btn">Submit</button>
+</form>
+<% } %>
+
+<% section['scripts'] = () => { %>
+<script>
+	window.addEventListener('click', e => {
+		if (e.target !== flashMessage && flashMessage.classList.contains('active')) {
+			flashMessage.classList.remove('active');
+			setTimeout(() => {
+				flashMessage.classList.remove('error');
+				flashMessage.classList.remove('success');
+			}, 1000);
+		}
+	})
+	async function onSubmit(form) {
+		try {
+			const formData = new FormData(form);
+			const data = {};
+			formData.forEach((value, key) => data[key] = value);
+			const res = await fetch(window.location.href, {
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				method: 'PUT',
+				body: JSON.stringify(data)
+			});
+			const json = await res.json();
+			if ('error' in json) {
+				flashMessage.textContent = json.error;
+				flashMessage.classList.add('error');
+				flashMessage.classList.add('active');
+				return;
+			}
+			flashMessage.textContent = json.success;
+			flashMessage.classList.add('success');
+			flashMessage.classList.add('active');
+			window.location.href = json.redirect + '?no-cache=' ;
+		} catch (err) {
+			console.error(err)
+		}
+	}
+</script>
+<% } %>
+
+<% }); %>
+
+<%- final %>

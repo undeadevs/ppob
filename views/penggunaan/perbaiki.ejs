@@ -1,0 +1,84 @@
+<% const final = await extend(`partials/layout`, {}, (section)=>{ %>
+
+<% section['headExt'] = () => { %>
+
+<link rel="stylesheet" href="/css/has-form.css">
+
+<% } %>
+
+<% section['sidebar-items'] = () => { %>
+
+<li class="sidebar-item">
+	<a href="/dashboard?no-cache=" class="sidebar-link">
+		<i class="fas fa-tv"></i>
+		<p>Dashboard</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/main?no-cache=" class="sidebar-link">
+		<i class="fas fa-suitcase"></i>
+		<p>Main</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/penggunaan?no-cache=" class="sidebar-link active">
+		<i class="fas fa-hand-holding-water"></i>
+		<p>Daftar Penggunaan</p>
+	</a>
+</li>
+
+<% } %>
+
+<% section['content'] = () => { %>
+<h2 class="form-title">Perbaiki Meteran</h2>
+<form action="/update-meteran" method="post" onsubmit="event.preventDefault(); onSubmit(this)">
+	<input type="hidden" name="csrfToken" value="<%=locals.csrfToken%>">
+	<div class="input-container">
+		<label for="id-pelanggan" class="styled-label">ID Pelanggan</label>
+		<input type="number" class="styled-input" name="idPelanggan" id="id-pelanggan" required>
+	</div>
+	<div class="input-container">
+		<label for="meteran-akhir" class="styled-label">Meteran Akhir</label>
+		<input type="number" class="styled-input" name="meteranAkhir" id="meteran-akhir" required>
+	</div>
+	<button class="styled-btn form-btn">Submit</button>
+</form>
+<% } %>
+
+<% section['scripts'] = () => { %>
+<script>
+	async function onSubmit(form) {
+		try {
+			const formData = new FormData(form);
+			const data = {};
+			formData.forEach((value, key) => data[key] = value);
+			const res = await fetch('/penggunaan/perbaiki', {
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				method: 'PUT',
+				body: JSON.stringify(data)
+			});
+			const json = await res.json();
+			if ('error' in json) {
+				flashMessage.textContent = json.error;
+				flashMessage.classList.add('error');
+				flashMessage.classList.add('active');
+				return;
+			}
+			flashMessage.textContent = json.success;
+			flashMessage.classList.add('success');
+			flashMessage.classList.add('active');
+			setTimeout(() => {
+				window.location.href = '/penggunaan' + '?no-cache=' ;
+			}, 1000);
+		} catch (err) {
+			console.error(err);
+		}
+	}
+</script>
+<% } %>
+
+<% }); %>
+
+<%- final %>

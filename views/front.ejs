@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ripple | Frontpage</title>
+    <link rel="shortcut icon" href="/images/ripple-e-logo.svg" type="image/x-icon">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/has-table.css">
+    <link rel="stylesheet" href="/css/cek-tagihan.css">
+    <link rel="stylesheet" href="/css/front.css">
+</head>
+<body>
+    <nav>
+        <div class="logo-container">
+            <svg class="logo" width="125" height="78" viewBox="0 0 210 78" xmlns="http://www.w3.org/2000/svg">
+                <use xlink:href="/images/ripple-logo.svg#ripple"></use>
+            </svg>
+        </div>
+        <a class="styled-btn login-btn" href="/login">Login</a>
+    </nav>
+    <main>
+        <h2 class="headline">Rippling Your Needs</h2>
+        <p class="subheadline">PPOB PDAM Samarinda</p>
+        <form onsubmit="event.preventDefault(); onSubmit(this)">
+            <p class="form-desc">Masukkan ID Pelanggan untuk mengecek tagihan secara online.</p>
+            <div class="bill-check-container">
+                <div class="input-container">
+                    <label for="id-pelanggan" class="styled-label">ID Pelanggan</label>
+                    <input type="number" class="styled-input" name="idPelanggan" id="id-pelanggan">
+                </div>
+                <button class="styled-btn" id="bill-check-btn"><i class="fas fa-arrow-right"></i></button>
+            </div>
+        </form>
+    </main>
+    <div class="modal-wrapper" id="check-bills-modal">
+        <div class="modal">
+            <p class="modal-desc">
+                Loading...
+            </p>
+
+            <div class="table-container loading">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID Pelanggan</th>
+                            <th>Nama Pelanggan</th>
+                            <th>Alamat</th>
+                            <th>Periode</th>
+                            <th>Penggunaan</th>
+                            <th>Harga Air</th>
+                            <th>Denda</th>
+                            <th>Nominal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="8">-</td>
+                        </tr>
+                        <tr>
+                            <td colspan="8">-</td>
+                        </tr>
+                        <tr>
+                            <td colspan="8">-</td>
+                        </tr>
+                        <tr>
+                            <td colspan="8">-</td>
+                        </tr>
+                        <tr>
+                            <td colspan="8">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script>
+        const checkBillsModal = document.getElementById('check-bills-modal');
+        const tableContainer = document.querySelector('.table-container');
+        const modalDesc = checkBillsModal.querySelector('.modal-desc');
+
+        function createCursor(x, y){
+            const cursor = document.createElement('div');
+            cursor.classList.add('ripple-cursor');
+            console.log(x, y);
+            cursor.style.left = x+'px';
+            cursor.style.top = y+'px';
+            const cursorSize = (Math.floor(Math.random()*10)+1);
+            cursor.style.width = cursorSize+'rem';
+            cursor.style.height = cursorSize+'rem';
+            document.body.append(cursor);
+            return cursor;
+        }
+
+        function removeCursor(cursor){
+            const timeout = setTimeout(()=>{
+                cursor.remove();
+                clearTimeout(timeout);
+            }, 2000)
+        }
+
+        checkBillsModal.addEventListener('click', e => {
+            if(e.target===checkBillsModal) checkBillsModal.classList.remove('active');
+        })
+
+        window.addEventListener('click', e=>{
+            e.stopImmediatePropagation();
+            const cursor = createCursor(e.clientX, e.clientY);
+            removeCursor(cursor)
+        })
+
+        function onSubmit(form){
+            const data = new FormData(form);
+            if(!data.get('idPelanggan')) return alert('ID Pelanggan tidak boleh kosong.');
+            checkBillsModal.classList.add('active');
+            cekTagihan(data.get('idPelanggan'));
+        }
+
+        async function cekTagihan(idPelanggan){
+            modalDesc.textContent='Loading...';
+            tableContainer.classList.add('loading');
+            tableContainer.innerHTML=`
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID Pelanggan</th>
+                        <th>Nama Pelanggan</th>
+                        <th>Alamat</th>
+                        <th>Periode</th>
+                        <th>Penggunaan</th>
+                        <th>Harga Air</th>
+                        <th>Denda</th>
+                        <th>Nominal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="8">-</td>
+                    </tr>
+                    <tr>
+                        <td colspan="8">-</td>
+                    </tr>
+                    <tr>
+                        <td colspan="8">-</td>
+                    </tr>
+                    <tr>
+                        <td colspan="8">-</td>
+                    </tr>
+                    <tr>
+                        <td colspan="8">-</td>
+                    </tr>
+                </tbody>
+            </table>
+            `
+
+            const res = await fetch(`/cek-tagihan?idPelanggan=${idPelanggan}`);
+            const json = await res.json();
+			if ('error' in json) {
+				modalDesc.textContent=json.error;
+                alert(json.error);
+				return;
+			}
+			const {
+				data: billsData
+			} = json;
+
+            tableContainer.innerHTML = /*html*/ `
+            <table>
+                <thead>
+                    <th>ID Pelanggan</th>
+                    <th>Nama Pelanggan</th>
+                    <th>Alamat</th>
+                    <th>Periode</th>
+                    <th>Penggunaan</th>
+                    <th>Harga Air</th>
+                    <th>Denda</th>
+                    <th>Nominal</th>
+                </thead>
+                <tbody>
+                    ${billsData.pastBills.map(bill=>{
+                        return /*html*/`
+                        <tr data-id="${bill.idTagihan}">
+                            <td>${bill.idPelanggan}</td>
+                            <td>${bill.namaPelanggan}</td>
+                            <td>${bill.alamat}</td>
+                            <td>${bill.periode}</td>
+                            <td>${bill.penggunaan}m<sup>3</sup></td>
+                            <td>Rp${bill.biaya.toLocaleString('de')}</td>
+                            <td>Rp${bill.denda.toLocaleString('de')}</td>
+                            <td>Rp${(bill.biaya+bill.denda).toLocaleString('de')}</td>
+                        </tr>
+                        `
+                    }).join('\\n')}
+                    ${billsData.currentBill ? /*html*/`
+                    <tr data-id="${billsData.currentBill.idTagihan}">
+                        <td>${billsData.currentBill.idPelanggan}</td>
+                        <td>${billsData.currentBill.namaPelanggan}</td>
+                        <td>${billsData.currentBill.alamat}</td>
+                        <td>${billsData.currentBill.periode}</td>
+                        <td>${billsData.currentBill.penggunaan}m<sup>3</sup></td>
+                        <td>Rp${billsData.currentBill.biaya.toLocaleString('de')}</td>
+                        <td>Rp${billsData.currentBill.denda.toLocaleString('de')}</td>
+                        <td>Rp${(billsData.currentBill.biaya+billsData.currentBill.denda).toLocaleString('de')}</td>
+                    </tr>
+                    ` : ``}
+                    ${!billsData.currentBill && billsData.pastBills.length===0?/*html*/`
+                    <tr>
+                        <td colspan="8">Tagihan belum keluar.</td>
+                    </tr>
+                    ` : /*html*/`
+                    `}
+                </tbody>
+            </table>
+			`;
+            tableContainer.classList.remove('loading');
+            modalDesc.textContent = `Tagihan untuk ID Pelanggan: ${idPelanggan}`;
+        }
+    </script>
+</body>
+</html>

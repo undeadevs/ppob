@@ -1,0 +1,194 @@
+<% const final = await extend(`partials/layout`, {}, (section)=>{ %>
+
+<% section['headExt'] = () => { %>
+
+<link rel="stylesheet" href="/css/has-table.css">
+<link rel="stylesheet" href="/css/has-form.css">
+<link rel="stylesheet" href="/css/cek-tagihan.css">
+
+<% } %>
+
+<% section['sidebar-items'] = () => { %>
+
+<li class="sidebar-item">
+	<a href="/dashboard?no-cache=" class="sidebar-link">
+		<i class="fas fa-tv"></i>
+		<p>Dashboard</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/main?no-cache=" class="sidebar-link active">
+		<i class="fas fa-suitcase"></i>
+		<p>Main</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/pembayaran?no-cache=" class="sidebar-link">
+		<i class="fas fa-hand-holding-usd"></i>
+		<p>Histori Pembayaran</p>
+	</a>
+</li>
+
+<% } %>
+
+<% section['content'] = () => { %>
+<h2 class="form-title">Cek Tagihan</h2>
+<form action="/cek-tagihan" method="get" onsubmit="event.preventDefault(); onSubmit(this)">
+	<input type="hidden" name="csrfToken" value="<%=locals.csrfToken%>">
+	<div class="bill-check-container">
+		<div class="input-container">
+			<label for="id-pelanggan" class="styled-label">ID Pelanggan</label>
+			<input type="number" class="styled-input" name="idPelanggan" id="id-pelanggan">
+		</div>
+		<button class="styled-btn" id="bill-check-btn"><i class="fas fa-arrow-right"></i></button>
+	</div>
+</form>
+<div class="bills-wrapper"></div>
+<% } %>
+
+<% section['scripts'] = () => { %>
+<script>
+
+	const billsWrapper = document.querySelector('.bills-wrapper');
+	async function onSubmit(form) {
+		try {
+			const formData = new FormData(form);
+			const data = {};
+			formData.forEach((value, key) => data[key] = value);
+			if (isNaN(parseInt(data.idPelanggan))) {
+				billsWrapper.innerHTML = '';
+				window.history.pushState({}, 'BILLS', '/main');
+				return;
+			}
+			const res = await fetch(`/cek-tagihan?idPelanggan=${data.idPelanggan}`);
+			const json = await res.json();
+			if ('error' in json) {
+				flashMessage.textContent = json.error;
+				flashMessage.classList.add('error');
+				flashMessage.classList.add('active');
+				billsWrapper.innerHTML = '';
+				return;
+			}
+			const {
+				data: billsData
+			} = json;
+			billsWrapper.innerHTML = /*html*/ `
+			<div class="table-container">
+				<table>
+					<thead>
+						<th>ID Pelanggan</th>
+						<th>Nama Pelanggan</th>
+						<th>Alamat</th>
+						<th>Periode</th>
+						<th>Penggunaan</th>
+						<th>Harga Air</th>
+						<th>Denda</th>
+						<th>Nominal</th>
+					</thead>
+					<tbody>
+						${billsData.pastBills.map(bill=>{
+							return /*html*/`
+							<tr data-id="${bill.idTagihan}">
+								<td>${bill.idPelanggan}</td>
+								<td>${bill.namaPelanggan}</td>
+								<td>${bill.alamat}</td>
+								<td>${bill.periode}</td>
+								<td>${bill.penggunaan}m<sup>3</sup></td>
+								<td>Rp${bill.biaya.toLocaleString('de')}</td>
+								<td>Rp${bill.denda.toLocaleString('de')}</td>
+								<td>Rp${(bill.biaya+bill.denda).toLocaleString('de')}</td>
+							</tr>
+							`
+						}).join('\\n')}
+						${billsData.currentBill ? /*html*/`
+						<tr data-id="${billsData.currentBill.idTagihan}">
+							<td>${billsData.currentBill.idPelanggan}</td>
+							<td>${billsData.currentBill.namaPelanggan}</td>
+							<td>${billsData.currentBill.alamat}</td>
+							<td>${billsData.currentBill.periode}</td>
+							<td>${billsData.currentBill.penggunaan}m<sup>3</sup></td>
+							<td>Rp${billsData.currentBill.biaya.toLocaleString('de')}</td>
+							<td>Rp${billsData.currentBill.denda.toLocaleString('de')}</td>
+							<td>Rp${(billsData.currentBill.biaya+billsData.currentBill.denda).toLocaleString('de')}</td>
+						</tr>
+						` : ``}
+						${!billsData.currentBill && billsData.pastBills.length===0?/*html*/`
+						<tr>
+							<td colspan="8">Tagihan belum keluar.</td>
+						</tr>
+						` : /*html*/`
+						<tr class="totals">
+							<td colspan="3" class="total-label">Total</td>
+							<td colspan="3">Rp${((billsData.currentBill?billsData.currentBill.biaya+billsData.currentBill.denda:0)+billsData.pastBills.reduce((a,b)=>a+(b.biaya+b.denda),0)).toLocaleString('de')}</td>
+							<td colspan="2">
+								<button class="styled-btn" id="pay-btn">Bayar</button>
+							</td>
+						</tr>
+						`}
+					</tbody>
+				</table>
+			</div>
+			`;
+			await initPay(data.idPelanggan, billsData.pdf64);
+			// flashMessage.textContent = json.success;
+			// flashMessage.classList.add('success');
+			// flashMessage.classList.add('active');
+			// window.location.href = json.redirect + '?no-cache=' ;
+		} catch (err) {
+			console.error(err);
+			alert('Terjadi Kesalahan.');
+		}
+	}
+	async function initPay(idPelanggan, pdfBase64) {
+		const payBtn = document.getElementById('pay-btn');
+		if (!payBtn) return;
+		payBtn.addEventListener('click', async (e) => {
+			try {
+				const newWindow = window.open('');
+				newWindow.document.write('<h1>Loading PDF...</h1>');
+				const res = await fetch('/bayar-tagihan', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						csrfToken: '<%= csrfToken %>',
+						idPelanggan: idPelanggan
+					})
+				});
+				const json = await res.json();
+				if ('error' in json) {
+					flashMessage.textContent = json.error;
+					flashMessage.classList.add('error');
+					flashMessage.classList.add('active');
+					return;
+				}
+				flashMessage.textContent = json.success;
+				flashMessage.classList.add('success');
+				flashMessage.classList.add('active');
+				setTimeout(() => {
+					openPDFBase64(newWindow, pdfBase64);
+					window.location.reload();
+				}, 1000);
+			} catch (err) {
+				console.error(err);
+				alert('Terjadi Kesalahan.');
+			}
+		});
+	}
+
+	function openPDFBase64(otherWindow, pdf64) {
+		var byteNumbers = atob(pdf64).split('').map((ch, i, s) => s.join('').charCodeAt(i))
+		var byteArray = new Uint8Array(byteNumbers);
+		var file = new Blob([byteArray], {
+			type: 'application/pdf;base64'
+		});
+		var fileURL = URL.createObjectURL(file);
+		otherWindow.location.href = fileURL;
+	}
+</script>
+<% } %>
+
+<% }); %>
+
+<%- final %>

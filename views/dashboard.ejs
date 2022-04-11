@@ -1,0 +1,157 @@
+<% const final = await extend(`partials/layout`, {}, (section)=>{ %>
+
+<% section['headExt'] = () => { %>
+
+<link rel="stylesheet" href="/css/dashboard.css">
+
+<% } %>
+
+<% section['sidebar-items'] = () => { %>
+
+<li class="sidebar-item">
+	<a href="/dashboard?no-cache=" class="sidebar-link active">
+		<i class="fas fa-tv"></i>
+		<p>Dashboard</p>
+	</a>
+</li>
+<% if(user.role==='administrator'){ %>
+<li class="sidebar-item">
+	<a href="/pelanggan?no-cache=" class="sidebar-link">
+		<i class="fas fa-user"></i>
+		<p>Daftar Pelanggan</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/karyawan?no-cache=" class="sidebar-link">
+		<i class="fas fa-user-tie"></i>
+		<p>Daftar Karyawan</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/penggunaan?no-cache=" class="sidebar-link">
+		<i class="fas fa-hand-holding-water"></i>
+		<p>Daftar Penggunaan</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/pembayaran?no-cache=" class="sidebar-link">
+		<i class="fas fa-hand-holding-usd"></i>
+		<p>Histori Pembayaran</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/tarif?no-cache=" class="sidebar-link">
+		<i class="fas fa-tags"></i>
+		<p>Daftar Tarif</p>
+	</a>
+</li>
+<% }else{ %>
+<li class="sidebar-item">
+	<a href="/main?no-cache=" class="sidebar-link">
+		<i class="fas fa-suitcase"></i>
+		<p>Main</p>
+	</a>
+</li>
+<% if(user.role==='field_officer'){ %>
+<li class="sidebar-item">
+	<a href="/penggunaan?no-cache=" class="sidebar-link">
+		<i class="fas fa-hand-holding-water"></i>
+		<p>Daftar Penggunaan</p>
+	</a>
+</li>
+<% }else{ %> 
+<li class="sidebar-item">
+	<a href="/pembayaran?no-cache=" class="sidebar-link">
+		<i class="fas fa-hand-holding-usd"></i>
+		<p>Histori Pembayaran</p>
+	</a>
+</li>
+<% } %>
+<% } %>
+
+<% } %>
+
+<% section['content'] = () => { %>
+<h2 class="page-title">Selamat Datang</h2>
+<% if(locals.user.role==='administrator'){ %>
+	<div class="content-grid">
+		<div class="info-container">
+			<div class="info-item" id="unpaid">
+				<h4>Belum Bayar Bulan Ini</h4>
+				<p><%=data.unpaid%></p>
+			</div>
+			<div class="info-item" id="late">
+				<h4>Menunggak</h4>
+				<p><%=data.late%></p>
+			</div>
+			<div class="info-item" id="paid">
+				<h4>Telah Bayar Bulan Ini</h4>
+				<p><%=data.paid%></p>
+			</div>
+			<div class="info-item">
+				<h4>Jumlah Pelanggan</h4>
+				<p><%=data.all%></p>
+			</div>
+		</div>
+		<div class="chart-container">
+			<div class="fallback">Data Kosong.</div>
+			<canvas id="piechart"></canvas>
+		</div>
+	</div>
+<% } %> 
+<% } %>
+
+<% section['scripts'] = () => { %>
+<% if(locals.user.role==='administrator'){ %>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script>
+const fallback = document.querySelector('.fallback');
+
+Chart.register({
+	id: 'noData',
+	afterDraw: function(chart) {
+		if (chart.data.datasets[0].data.every(item => item === 0)) {
+			fallback.classList.add('active');
+			return;
+		}
+		fallback.classList.remove('active');
+	}
+});
+
+const ctx = document.getElementById('piechart').getContext('2d');
+const pieChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Belum Bayar Bulan Ini', 'Menunggak', 'Telah Bayar Bulan Ini'],
+        datasets: [{
+            label: '# of Customers',
+            data: [parseInt('<%=data.unpaid%>'), parseInt('<%=data.late%>'), parseInt('<%=data.paid%>')],
+            backgroundColor: [
+				'rgba(233, 174, 45, 0.5)',
+				'rgba(233, 47, 91, 0.5)',
+                'rgba(23, 185, 110, 0.5)'
+            ],
+            borderColor: [
+				'rgba(233, 174, 45, 1)',
+                'rgba(233, 47, 91, 1)',
+                'rgba(23, 185, 110, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+		plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+</script>
+<% } %> 
+<% } %>
+
+<% }); %>
+
+<%- final %>

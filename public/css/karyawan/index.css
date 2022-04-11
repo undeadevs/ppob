@@ -1,0 +1,13 @@
+.modal-wrapper .input-container {
+    font-size: 1.5rem;
+    margin: 1rem 0;
+}
+
+.modal-wrapper .styled-label {
+    font-weight: 600;
+}
+
+.modal-wrapper .styled-input {
+    padding: 1rem;
+    width: 100%;
+}

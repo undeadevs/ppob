@@ -1,0 +1,222 @@
+<% const final = await extend(`partials/layout`, {}, (section)=>{ %>
+
+<% section['headExt'] = () => { %>
+
+<link rel="stylesheet" href="/css/has-table.css">
+<link rel="stylesheet" href="/css/has-form.css">
+<style>
+	.top{
+		margin-bottom: 0rem;
+	}
+	.table-container{
+		margin-top: 0rem;
+	}
+</style>
+
+<% } %>
+
+<% section['sidebar-items'] = () => { %>
+
+<li class="sidebar-item">
+	<a href="/dashboard?no-cache=" class="sidebar-link">
+		<i class="fas fa-tv"></i>
+		<p>Dashboard</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/pelanggan?no-cache=" class="sidebar-link">
+		<i class="fas fa-user"></i>
+		<p>Daftar Pelanggan</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/karyawan?no-cache=" class="sidebar-link">
+		<i class="fas fa-user-tie"></i>
+		<p>Daftar Karyawan</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/penggunaan?no-cache=" class="sidebar-link">
+		<i class="fas fa-hand-holding-water"></i>
+		<p>Daftar Penggunaan</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/pembayaran?no-cache=" class="sidebar-link">
+		<i class="fas fa-hand-holding-usd"></i>
+		<p>Histori Pembayaran</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/tarif?no-cache=" class="sidebar-link active">
+		<i class="fas fa-tags"></i>
+		<p>Daftar Tarif</p>
+	</a>
+</li>
+
+<% } %>
+
+<% section['content'] = () => { %>
+<h2 class="form-title">Edit Tarif</h2>
+<form method="post" onsubmit="event.preventDefault(); onSubmit(this)">
+	<input type="hidden" name="csrfToken" value="<%=locals.csrfToken%>">
+	<div class="input-container">
+		<label for="nama-kelompok" class="styled-label">Nama Kelompok</label>
+		<input type="text" class="styled-input" name="namaKelompok" id="nama-kelompok" value="<%= kategoriData.namaKategori %>" required>
+	</div>
+	<section class="table-section">
+		<section class="top">
+			<h2 class="table-title">Subkategori</h2>
+			<a href="/tarif/<%= kategoriData.idKategori %>/subkategori/add" class="styled-btn table-btn"><i class="fas fa-plus"></i></a>
+		</section>
+		<div class="table-container">
+			<table>
+				<thead>
+					<tr>
+						<th>Nama Subkategori</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					<% subkategoriData.forEach(subkategori=>{ %>
+						<tr>
+							<td><%= subkategori.namaSubkategori %></td>
+							<td class="action-col">
+								<div class="action-td">
+									<a href="/tarif/<%= kategoriData.idKategori %>/subkategori/<%=subkategori.idSubkategori%>" class="styled-btn row-btn edit-btn"><i class="fas fa-pen"></i></a>
+									<button type="button" class="styled-btn red-btn row-btn delete-btn" onclick="deleteSubkategori('<%=subkategori.idSubkategori%>')"><i class="fas fa-trash"></i></button>
+								</div>
+							</td>
+						</tr>
+					<% }) %>
+				</tbody>
+			</table>
+		</div>
+	</section>
+	<section class="table-section">
+		<section class="top">
+			<h2 class="table-title">Range Tarif</h2>
+			<a href="/tarif/<%= kategoriData.idKategori %>/range/add" class="styled-btn table-btn"><i class="fas fa-plus"></i></a>
+		</section>
+		<div class="table-container">
+			<table>
+				<thead>
+					<tr>
+						<th>Range Awal (M<sup>3</sup>)</th>
+						<th>Range Akhir (M<sup>3</sup>)</th>
+						<th>Nilai</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					<% tarifData.sort((a,b)=>a.rangeAwal-b.rangeAwal).forEach(tarif=>{ %>
+						<tr>
+							<td><%= tarif.rangeAwal %></td>
+							<td><%= tarif.rangeAkhir || 'Up' %></td>
+							<td><%= tarif.nilai %></td>
+							<td class="action-col">
+								<div class="action-td">
+									<a href="/tarif/<%= kategoriData.idKategori %>/range/<%=tarif.idTarif%>" class="styled-btn row-btn edit-btn"><i class="fas fa-pen"></i></a>
+									<button type="button" class="styled-btn red-btn row-btn delete-btn" onclick="deleteRange('<%=tarif.idTarif%>')"><i class="fas fa-trash"></i></button>
+								</div>
+							</td>
+						</tr>
+					<% }) %>
+				</tbody>
+			</table>
+		</div>
+	</section>
+	<button class="styled-btn form-btn">Save</button>
+</form>
+<% } %>
+
+<% section['scripts'] = () => { %>
+<script>
+	async function deleteSubkategori(idSubkategori){
+		if(!confirm('Yakin hapus?')) return;
+		try{
+			const res = await fetch(`${window.location.pathname}/subkategori/${idSubkategori}`, {
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				method: 'DELETE',
+				body: JSON.stringify({csrfToken: '<%= csrfToken %>'})
+			});
+			const json = await res.json();
+			if ('error' in json) {
+				flashMessage.textContent = json.error;
+				flashMessage.classList.add('error');
+				flashMessage.classList.add('active');
+				return;
+			}
+			flashMessage.textContent = json.success;
+			flashMessage.classList.add('success');
+			flashMessage.classList.add('active');
+			window.location.href = json.redirect + '?no-cache=' ;
+		}catch(err){
+			console.error(err)
+		}
+	}
+
+
+	async function deleteRange(idRange){
+		if(!confirm('Yakin hapus?')) return;
+		try{
+			const res = await fetch(`${window.location.pathname}/range/${idRange}`, {
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				method: 'DELETE',
+				body: JSON.stringify({csrfToken: '<%= csrfToken %>'})
+			});
+			const json = await res.json();
+			if ('error' in json) {
+				flashMessage.textContent = json.error;
+				flashMessage.classList.add('error');
+				flashMessage.classList.add('active');
+				return;
+			}
+			flashMessage.textContent = json.success;
+			flashMessage.classList.add('success');
+			flashMessage.classList.add('active');
+			window.location.href = json.redirect + '?no-cache=' ;
+		}catch(err){
+			console.error(err)
+		}
+	}
+
+	async function onSubmit(form) {
+		try {
+			const formData = new FormData(form);
+			const data = {};
+			formData.forEach((value, key) => {
+				data[key] = value;
+			});
+			const res = await fetch(window.location.href, {
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				method: 'PUT',
+				body: JSON.stringify(data)
+			});
+			const json = await res.json();
+			if ('error' in json) {
+				flashMessage.textContent = json.error;
+				flashMessage.classList.add('error');
+				flashMessage.classList.add('active');
+				return;
+			}
+			flashMessage.textContent = json.success;
+			flashMessage.classList.add('success');
+			flashMessage.classList.add('active');
+			window.location.href = json.redirect + '?no-cache=' ;
+		} catch (err) {
+			console.error(err)
+		}
+	}
+</script>
+<% } %>
+
+<% }); %>
+
+<%- final %>

@@ -1,0 +1,66 @@
+main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: fit-content;
+    min-height: 100vh;
+    padding: 7.5rem 5rem;
+}
+
+form {
+    width: 100%;
+    display: grid;
+    gap: 1.5rem;
+}
+
+.form-title {
+    margin-bottom: 2.5rem;
+    text-align: center;
+}
+
+.styled-label {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.styled-input {
+    width: 100%;
+    font-size: 1.5rem;
+    padding: 1rem;
+}
+
+.styled-btn {
+    height: fit-content;
+    align-self: end;
+    font-size: 1.5rem;
+    padding: 1rem 1.47rem;
+}
+
+.form-btn {
+    margin: 0 auto;
+    margin-top: 1rem;
+    font-weight: 600;
+    padding: 1rem 4rem;
+}
+
+.group-input-container>p, .input-container>p{
+    color: #cacaca;
+}
+
+.ib-container {
+    display: grid;
+    grid-template-columns: 1fr max-content;
+    gap: 1rem;
+    margin-top: 1.25rem;
+}
+
+.ib-container.icol-3 {
+    grid-template-columns: repeat(3, 1fr) max-content;
+}
+
+@media screen and (max-width:456px) {
+    main {
+        padding: 0 2rem;
+    }
+}

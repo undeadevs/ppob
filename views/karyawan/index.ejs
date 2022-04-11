@@ -1,0 +1,254 @@
+<% const final = await extend(`partials/layout`, {}, (section)=>{ %>
+
+<% section['headExt'] = () => { %>
+
+<link rel="stylesheet" href="/css/has-table.css">
+<link rel="stylesheet" href="/css/karyawan/index.css">
+
+<% } %>
+
+<% section['sidebar-items'] = () => { %>
+
+<li class="sidebar-item">
+	<a href="/dashboard?no-cache=" class="sidebar-link">
+		<i class="fas fa-tv"></i>
+		<p>Dashboard</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/pelanggan?no-cache=" class="sidebar-link">
+		<i class="fas fa-user"></i>
+		<p>Daftar Pelanggan</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/karyawan?no-cache=" class="sidebar-link active">
+		<i class="fas fa-user-tie"></i>
+		<p>Daftar Karyawan</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/penggunaan?no-cache=" class="sidebar-link">
+		<i class="fas fa-hand-holding-water"></i>
+		<p>Daftar Penggunaan</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/pembayaran?no-cache=" class="sidebar-link">
+		<i class="fas fa-hand-holding-usd"></i>
+		<p>Histori Pembayaran</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/tarif?no-cache=" class="sidebar-link">
+		<i class="fas fa-tags"></i>
+		<p>Daftar Tarif</p>
+	</a>
+</li>
+
+<% } %>
+
+<% section['content'] = () => { %>
+<section class="top">
+	<h2 class="table-title">Daftar Karyawan</h2>
+	<button class="styled-btn table-btn" id="reg-code-toggle">Kode Registrasi</button>
+</section>
+<div class="search-container">
+	<input class="styled-input" type="text" name="search" id="search-input" size="1">
+	<button class="styled-btn" id="search-btn">
+		<i class="fas fa-search"></i>
+	</button>
+</div>
+<div class="table-container loading">
+	<table>
+		<thead>
+			<tr>
+				<th>Username</th>
+				<th>Password</th>
+				<th>Role</th>
+				<th class="action-col">Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td colspan="4">-</td>
+			</tr>
+			<tr>
+				<td colspan="4">-</td>
+			</tr>
+			<tr>
+				<td colspan="4">-</td>
+			</tr>
+			<tr>
+				<td colspan="4">-</td>
+			</tr>
+			<tr>
+				<td colspan="4">-</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+<div class="bottom">
+	<p class="page-info">Page <span class="accented" id="current-page">1</span> of <span id="page-count">1</span></p>
+	<button class="styled-btn" id="prev-btn" disabled>
+		<i class="fas fa-angle-left"></i>
+	</button>
+	<button class="styled-btn" id="next-btn" disabled>
+		<i class="fas fa-angle-right"></i>
+	</button>
+</div>
+
+<div class="modal-wrapper" id="reg-code-modal">
+	<div class="modal">
+		<p class="modal-desc">
+			Untuk melakukan registrasi karyawan,  gunakanlah <span class="accented">Kode Registrasi</span> dibawah ini.
+		</p>
+
+		<div class="reg-code-container">
+			<div class="input-container">
+				<label for="code-administrator" class="styled-label">Kode Administrator</label>
+				<p class="styled-input" name="codeAdministrator" id="code-administrator"><%= regCodes.administrator %></p>
+			</div>
+			<div class="input-container">
+				<label for="code-field-officer" class="styled-label">Kode Field Officer</label>
+				<p class="styled-input" name="codeFieldOfficer" id="code-field-officer"><%= regCodes.fieldOfficer %></p>
+			</div>
+			<div class="input-container">
+				<label for="code-cashier" class="styled-label">Kode Cashier</label>
+				<p class="styled-input" name="codeCashier" id="code-cashier"><%= regCodes.cashier %></p>
+			</div>
+		</div>
+	</div>
+</div>
+<% } %>
+
+<% section['scripts'] = () => { %>
+<script>
+	
+	const sInput = document.getElementById('search-input');
+	const sBtn = document.getElementById('search-btn');
+	const tableContainer = document.querySelector('.table-container');
+	const tBody = document.querySelector('tbody');
+	const currentPageEl = document.getElementById('current-page');
+	const pageCountEl = document.getElementById('page-count');
+	const prevBtn = document.getElementById('prev-btn');
+	const nextBtn = document.getElementById('next-btn');
+	const regCodeToggle = document.getElementById('reg-code-toggle');
+	const regCodeModal = document.getElementById('reg-code-modal');
+
+	regCodeToggle.addEventListener('click', e => {
+		regCodeModal.classList.add('active');
+	})
+
+	regCodeModal.addEventListener('click', e => {
+		if (e.target === regCodeModal) regCodeModal.classList.remove('active');
+	})
+
+	window.addEventListener('load', async (e) => {
+		const qparams = new URLSearchParams(window.location.search);
+		await getKaryawan(qparams.get('search'), qparams.get('page'));
+	})
+
+	sInput.addEventListener('keyup', async (e) => {
+		const qparams = new URLSearchParams(window.location.search);
+		if (e.key === 'Enter') {
+			await getKaryawan(sInput.value, qparams.get('page'))
+		}
+	})
+
+	sBtn.addEventListener('click', async (e) => {
+		const qparams = new URLSearchParams(window.location.search);
+		await getKaryawan(sInput.value, qparams.get('page'))
+	})
+
+	prevBtn.addEventListener('click', async (e) => {
+		const qparams = new URLSearchParams(window.location.search);
+		let page = parseInt(qparams.get('page'));
+		page = page ? page : 1;
+		await getKaryawan(qparams.get('search'), page - 1)
+	});
+
+	nextBtn.addEventListener('click', async (e) => {
+		const qparams = new URLSearchParams(window.location.search);
+		let page = parseInt(qparams.get('page'));
+		page = page ? page : 1;
+		await getKaryawan(qparams.get('search'), page + 1)
+	});
+
+	async function getKaryawan(search, page) {
+		try {
+			page = parseInt(page) ? parseInt(page) : 1;
+			let res;
+			tableContainer.classList.add('loading')
+			if (search) {
+				res = await fetch(`/karyawan/get?search=${search}&page=${page}`);
+				window.history.pushState({}, 'GET', `/karyawan?search=${search}&page=${page}`);
+				sInput.value = search;
+			} else {
+				res = await fetch(`/karyawan/get?page=${page}`);
+				window.history.pushState({}, 'GET', `/karyawan?page=${page}`);
+				sInput.value = '';
+			}
+			const {
+				count,
+				pageCount,
+				currentPage,
+				hasPrev,
+				hasNext,
+				data
+			} = await res.json();
+			tBody.innerHTML = data.length > 0 ?
+				data.map(row => /*html*/`<tr>
+                            <td>${row.username}</td>
+                            <td>-ENCRYPTED-</td>
+                            <td style="text-transform: capitalize;">${row.role.replace(/_/g,' ')}</td>
+							<td class="action-col">
+								<div class="action-td">
+									<a href="/karyawan/${row.idKaryawan}?no-cache=" class="styled-btn row-btn edit-btn"><i class="fas fa-pen"></i></a>
+									<button class="styled-btn red-btn row-btn delete-btn" onclick="deleteKaryawan(${row.idKaryawan})"><i class="fas fa-trash"></i></button>
+								</div>
+							</td>
+                        </tr>`).join('\\n') :
+				`<tr><td colspan="4">Kosong.</td></tr>`;
+			prevBtn.disabled = !hasPrev;
+			nextBtn.disabled = !hasNext;
+			currentPageEl.textContent = pageCount <= 0 ? 0 : currentPage;
+			pageCountEl.textContent = pageCount;
+			tableContainer.classList.remove('loading');
+		} catch (err) {
+			console.error(err);
+			alert('Terjadi Kesalahan.');
+		}
+	}
+
+	async function deleteKaryawan(idKaryawan) {
+		try {
+			const res = await fetch(`/karyawan/${idKaryawan}`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({csrfToken: '<%=csrfToken%>'})
+			});
+			const json = await res.json();
+			if ('error' in json) {
+				flashMessage.textContent = json.error;
+				flashMessage.classList.add('error');
+				flashMessage.classList.add('active');
+				return;
+			}
+			flashMessage.textContent = json.success;
+			flashMessage.classList.add('success');
+			flashMessage.classList.add('active');
+			window.location.reload();
+		}catch(err){
+			console.error(err);
+			alert('Terjadi Kesalahan.');
+		}
+	}
+</script>
+<% } %>
+
+<% }); %>
+
+<%- final %>

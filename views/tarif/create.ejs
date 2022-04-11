@@ -1,0 +1,177 @@
+<% const final = await extend(`partials/layout`, {}, (section)=>{ %>
+
+<% section['headExt'] = () => { %>
+
+<link rel="stylesheet" href="/css/has-form.css">
+
+<% } %>
+
+<% section['sidebar-items'] = () => { %>
+
+<li class="sidebar-item">
+	<a href="/dashboard?no-cache=" class="sidebar-link">
+		<i class="fas fa-tv"></i>
+		<p>Dashboard</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/pelanggan?no-cache=" class="sidebar-link">
+		<i class="fas fa-user"></i>
+		<p>Daftar Pelanggan</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/karyawan?no-cache=" class="sidebar-link">
+		<i class="fas fa-user-tie"></i>
+		<p>Daftar Karyawan</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/penggunaan?no-cache=" class="sidebar-link">
+		<i class="fas fa-hand-holding-water"></i>
+		<p>Daftar Penggunaan</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/pembayaran?no-cache=" class="sidebar-link">
+		<i class="fas fa-hand-holding-usd"></i>
+		<p>Histori Pembayaran</p>
+	</a>
+</li>
+<li class="sidebar-item">
+	<a href="/tarif?no-cache=" class="sidebar-link active">
+		<i class="fas fa-tags"></i>
+		<p>Daftar Tarif</p>
+	</a>
+</li>
+
+<% } %>
+
+<% section['content'] = () => { %>
+<h2 class="form-title">Tambah Tarif</h2>
+<form action="/pelanggan/register" method="post" onsubmit="event.preventDefault(); onSubmit(this)">
+	<input type="hidden" name="csrfToken" value="<%=locals.csrfToken%>">
+	<div class="input-container">
+		<label for="nama-kelompok" class="styled-label">Nama Kelompok</label>
+		<input type="text" class="styled-input" name="namaKelompok" id="nama-kelompok" required>
+	</div>
+	<div class="group-input-container">
+		<label for="subkategori" class="styled-label">Subkategori</label>
+		<div class="input-container ib-container">
+			<input type="text" class="styled-input" name="subkategori[]" required>
+			<button class="styled-btn add-sub-btn" type="button" onclick="addSubkategori(this)"><i class="fas fa-plus"></i></button>
+		</div>
+	</div>
+	<div class="group-input-container">
+		<label for="range" class="styled-label">Range (Range Awal - Range Akhir - Nilai)</label>
+		<p>Untuk range terakhir seperti: 50 keatas, masukkan 0 sebagai Range Akhir</p>
+		<div class="input-container ib-container icol-3">
+			<input type="number" class="styled-input" name="rangeAwal[]" required>
+			<input type="number" class="styled-input" name="rangeAkhir[]" required>
+			<input type="number" class="styled-input" name="nilai[]" required>
+			<button class="styled-btn add-sub-btn" type="button" onclick="addRange(this)"><i class="fas fa-plus"></i></button>
+		</div>
+	</div>
+	<button class="styled-btn form-btn">Submit</button>
+</form>
+<% } %>
+
+<% section['scripts'] = () => { %>
+<script>
+	function addSubkategori(btn){
+		const btnParent = btn.parentElement.parentElement;
+		btnParent.insertAdjacentHTML('beforeend', /*html*/`
+		<div class="input-container ib-container">
+			<input type="text" class="styled-input" name="subkategori[]" required>
+			<button class="styled-btn red-btn" type="button" onclick="deleteSubkategori(this)"><i class="fas fa-trash"></i></button>
+		</div>
+		`);
+	}
+	function deleteSubkategori(btn){
+		const btnParent = btn.parentElement;
+		btnParent.remove();
+	}
+
+	function addRange(btn){
+		const btnParent = btn.parentElement.parentElement;
+		btnParent.insertAdjacentHTML('beforeend', /*html*/`
+		<div class="input-container ib-container icol-3">
+			<input type="number" class="styled-input" name="rangeAwal[]" required>
+			<input type="number" class="styled-input" name="rangeAkhir[]" required>
+			<input type="number" class="styled-input" name="nilai[]" required>
+			<button class="styled-btn red-btn" type="button" onclick="deleteRange(this)"><i class="fas fa-trash"></i></button>
+		</div>
+		`);
+	}
+	function deleteRange(btn){
+		const btnParent = btn.parentElement;
+		btnParent.remove();
+	}
+
+	async function onSubmit(form) {
+		try {
+			const formData = new FormData(form);
+			const data = {};
+			formData.forEach((value, key) => {
+				if(key.endsWith('[]')){
+					if(!(key.replace(/\\[\\]$/g,'') in data)) data[key.replace(/\\[\\]$/g,'')] = [];
+					data[key.replace(/\\[\\]$/g,'')].push(value);
+					return;
+				}
+				data[key] = value;
+			});
+			const rangeAwalVal=data.rangeAwal.every((item, rwi)=>{
+				item = parseInt(item);
+				if(rwi===0) return item===0;
+				return item===parseInt(data.rangeAkhir[rwi-1])+1;
+			});
+			const rangeAkhirVal=data.rangeAkhir.every((item, rai)=>{
+				item = parseInt(item);
+				if(rai===data.rangeAkhir.length-1) return item===0;
+				return item>parseInt(data.rangeAwal[rai]);
+			});
+			const nilaiVal = data.nilai.every((item, ni)=>{
+				item = parseInt(item);
+				if(ni===0) return true;
+				return item>data.nilai[ni-1];
+			});
+			if(!(rangeAwalVal && rangeAkhirVal && nilaiVal)){
+				flashMessage.textContent = 'Range Invalid';
+				flashMessage.classList.add('error');
+				flashMessage.classList.add('active');
+				return;
+			}
+			data.range=data.nilai.map((nilai, i)=>{
+				return {rangeAwal: parseInt(data.rangeAwal[i]), rangeAkhir: parseInt(data.rangeAkhir[i]), nilai: parseInt(nilai)};
+			});
+			delete data.rangeAwal;
+			delete data.rangeAkhir;
+			delete data.nilai;
+			const res = await fetch('/tarif/add', {
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				method: 'POST',
+				body: JSON.stringify(data)
+			});
+			const json = await res.json();
+			if ('error' in json) {
+				flashMessage.textContent = json.error;
+				flashMessage.classList.add('error');
+				flashMessage.classList.add('active');
+				return;
+			}
+			flashMessage.textContent = json.success;
+			flashMessage.classList.add('success');
+			flashMessage.classList.add('active');
+			window.location.href = json.redirect + '?no-cache=' ;
+		} catch (err) {
+			console.error(err)
+		}
+	}
+</script>
+<% } %>
+
+<% }); %>
+
+<%- final %>

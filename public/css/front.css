@@ -1,0 +1,153 @@
+.fas::before, .fas::after {
+    font-family: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.ripple-cursor {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    border: .1rem solid rgba(55, 159, 207, 0.466);
+    outline: .1rem solid rgba(55, 197, 207, 0.466);
+
+    box-shadow: 0 0 2rem rgba(47, 55, 175, 0.466);
+
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    transform: translate(-50%, -50%);
+
+    animation: rippleCursor .5s ease-out forwards;
+
+    z-index: 9999;
+}
+
+body {
+    background: linear-gradient(to bottom, hsla(224, 37%, 24%, 0.75), hsla(224, 37%, 24%, 0.70)), url("/images/ripple-hero-blur.png");
+    background-size: cover;
+    background-position: top center;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: max-content 1fr;
+}
+
+nav {
+    /* background-color: #262941; */
+    padding: 2.5rem 3rem;
+    display: grid;
+    grid-template-columns: 1fr max-content;
+    align-items: center;
+}
+
+nav .logo {
+    color: #38B2F6;
+    height: 3rem;
+}
+
+nav>.login-btn {
+    text-decoration: none;
+    background-color: #38B2F6;
+    color: white;
+    padding: .5rem 1.5rem;
+    border-radius: .25rem;
+    font-size: 1.25rem;
+    font-weight: 500;
+    align-self: center;
+}
+
+main {
+    display: grid;
+    place-content: center;
+    text-align: center;
+    padding: 0 3rem;
+    height: auto;
+    min-height: auto;
+}
+
+.headline {
+    font-size: 3rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25em;
+    margin-bottom: 1.5rem;
+}
+
+.subheadline {
+    font-size: 1.75rem;
+    font-weight: 400;
+    color: #D8D8D8;
+}
+
+.styled-label {
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-align: left;
+}
+
+.styled-input {
+    width: 100%;
+    font-size: 1.5rem;
+    padding: 1rem;
+}
+
+.styled-btn {
+    height: fit-content;
+    align-self: end;
+    font-size: 1.5rem;
+    padding: 1rem 1.47rem;
+}
+
+form{
+    margin-top: 1.5rem;
+    gap: .75rem;
+}
+
+.form-desc{
+    font-size: 1.25rem;
+    color: #D8D8D8;
+    margin: 0 1.5rem;
+}
+
+.modal{
+    max-width: 90vw;
+}
+
+.table-container{
+    margin-top: 1rem;
+}
+
+.table-container tbody>tr>td:first-child:before{
+    background-color: #23477c;
+}
+
+.table-container.loading tbody>tr::after{
+    background-image: linear-gradient(to right, transparent, rgba(0, 183, 255, 0.349), transparent);
+}
+
+@keyframes rippleCursor {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+        outline-offset: .25rem;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+        outline-offset: 1rem;
+    }
+}
+
+@media screen and (max-width: 550px) {
+    html {
+        font-size: .75rem;
+    }
+}

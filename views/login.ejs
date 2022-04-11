@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>ripple | <%= locals.title %> </title>
+		<link rel="shortcut icon" href="/images/ripple-e-logo.svg" type="image/x-icon">
+		<link rel="stylesheet" href="/css/global.css">
+		<link rel="stylesheet" href="/css/login-register.css">
+	</head>
+
+	<body>
+		<div class="flash-message" aria-hidden="true"></div>
+
+		<div class="logo-container">
+			<svg class="logo" width="210" height="78" viewBox="0 0 210 78" xmlns="http://www.w3.org/2000/svg">
+				<use xlink:href="/images/ripple-logo.svg#ripple"></use>
+			</svg>
+		</div>
+
+		<form action="/login" method="post" onsubmit="event.preventDefault(); onSubmit(this)">
+			<input type="hidden" name="csrfToken" value="<%=locals.csrfToken%>">
+			<div class="input-container">
+				<label for="username" class="styled-label">Username</label>
+				<input type="text" class="styled-input" id="username" name="username" required>
+			</div>
+			<div class="input-container">
+				<label for="password" class="styled-label">Password</label>
+				<input type="password" class="styled-input" id="password" name="password" required>
+			</div>
+
+			<button class="styled-btn form-btn">Login</button>
+
+			<p class="other-info">Belum punya akun? <a href="/register?no-cache=" class="styled-link">Register Disini</a></p>
+		</form>
+
+		<script>
+			const flashMessage = document.querySelector('.flash-message');
+			window.addEventListener('click', e => {
+				if (e.target !== flashMessage && flashMessage.classList.contains('active')) {
+					flashMessage.classList.remove('active');
+				}
+			})
+			async function onSubmit(form) {
+				try {
+					const formData = new FormData(form);
+					const data = {};
+					formData.forEach((value, key) => data[key] = value);
+					const res = await fetch('/login', {
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						method: 'POST',
+						body: JSON.stringify(data)
+					});
+					const json = await res.json();
+					if ('error' in json) {
+						flashMessage.textContent = json.error;
+						flashMessage.classList.add('error');
+						flashMessage.classList.add('active');
+						return;
+					}
+					flashMessage.textContent = json.success;
+					flashMessage.classList.add('success');
+					flashMessage.classList.add('active');
+					window.location.href = json.redirect + '?no-cache=' ;
+				} catch (err) {
+					console.error(err)
+				}
+			}
+		</script>
+	</body>
+
+</html>
